@@ -83,6 +83,12 @@ public:
         info("Welcome to the BlockChain command parser.");
         info("Registered DataDirectory: %s to scan for the blockchain.", dataPath);
         mBlockChain = createBlockChain(dataPath, files); // Create the block-chain parser using this root path
+        if (mBlockChain) {
+            info("\e[32m File: %s opened successfuly in directory: %s \e[0m", files.c_str(), dataPath);
+        } else {
+            info("\e[31m Failed to open file: %s in directory: %s \e[0m", files.c_str(), dataPath);
+            mMode = CM_EXIT;
+        }
         mStatResolution = SR_YEAR;
         mMaxBlock = 500000;
         mProcessTransactions = false;
@@ -97,13 +103,6 @@ public:
         mRecordAddresses = false;
         mAddresses = NULL;
         mMode = CM_NONE;
-
-        if (mBlockChain) {
-            info("\e[32m File: blk00000.dat opened successfuly in directory: %s \e[0m", dataPath);
-        } else {
-            info("\e[31m Failed to open file: blk00000.dat in directory: %s \e[0m", dataPath);
-            mMode = CM_EXIT;
-        }
     }
 
     ~BlockChainCommand(void) {
@@ -132,8 +131,6 @@ public:
             mMode = CM_NONE; // done scanning.
             mLastBlockScan = mBlockChain->buildBlockChain();
             info("\e[44m Finished scanning block headers. Built block-chain with %d blocks found.. \e[0m", mLastBlockScan);
-            info("\e[44m To resolve transactions you must execute the 'process' command. \e[0m");
-            info("\e[44m To gather statistics so you can ouput balances of individual addresses, you must execute the 'statistics' command prior to running the process command. \e[0m");
             readAndPrintBlockChain(mLastBlockScan);
             return false;
         }
@@ -183,13 +180,16 @@ int main(int argc, const char **argv) {
     filesList.erase(filesList.begin());
     for (uint8_t i = 0; i < filesList.size(); ++i)
         cout << filesList[i] << endl;
-    BlockChainCommand bc(dataPath, filesList[0].c_str());
-    while (bc.scanBlockChain());
-
-    auto elapsed = (Timer::usecs() - start)*1e-6;
-    info("\e[32m all done in %.2f seconds \e[0m", elapsed);
-    info("\e[32m mem at end = %.3f Gigs \e[0m", getMem());
-    info("\e[31m json file was output to current directory... \e[0m");
+    
+    auto elapsed = Timer::usecs();
+    for (uint32_t i = 0; i < filesList.size(); ++i) {
+        BlockChainCommand bc(dataPath, filesList[i].c_str());
+        while (bc.scanBlockChain());
+        elapsed = (Timer::usecs() - start)*1e-6;
+        info("\e[32m all done in %.2f seconds \e[0m", elapsed);
+        info("\e[32m mem at end = %.3f Gigs \e[0m", getMem());
+        info("\e[31m json file was output to current directory... \e[0m");
+    }
 
     return 0;
 }

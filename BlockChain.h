@@ -234,7 +234,7 @@ public:
     virtual void release(void) = 0; // This method releases the block chain interface.
 };
 
-
+class BlockChainImpl;
 BlockChain *createBlockChain(const char *rootPath, string files); // Create the BlockChain interface using this root directory for the location of the first 'blk00000.dat' on your hard drive.
 
 #endif

@@ -3977,9 +3977,8 @@ protected:
 // This is the implementation of the BlockChain parser interface
 
 class BlockChainImpl : public BlockChain {
-private:
-    static BlockChainImpl *mBlockChainImpl;
-
+//private:
+public:
     BlockChainImpl(const char *rootPath, string files) {
         sprintf(mRootDir, "%s", rootPath);
         mCurrentBlockData = mBlockDataBuffer; // scratch buffers to read in up to 3 block.
@@ -4003,6 +4002,7 @@ private:
 
     // Close all blockchain files which have been opended so far
 public:
+    static BlockChainImpl *mBlockChainImpl;
 
     static BlockChainImpl* getInstance(const char *rootPath, string files) {
         if (mBlockChainImpl == NULL) {
@@ -4658,7 +4658,7 @@ public:
 BlockChainImpl *BlockChainImpl::mBlockChainImpl = 0;
 
 BlockChain *createBlockChain(const char *rootPath, string files) {
-    BlockChainImpl *b = BlockChainImpl::getInstance(rootPath, files);
+    BlockChainImpl *b = new BlockChainImpl(rootPath, files);
     if (!b->isValid()) {
         delete b;
         b = NULL;
