@@ -25,7 +25,6 @@ using namespace std;
 #pragma warning(disable:4996 4702 4505)
 
 time_t zombieDate(0x510B56CB); // right around January 1, 2013
-char mDataPath[1024];
 
 int getDir(string dir, vector<string> &files) {
     DIR *dp;
