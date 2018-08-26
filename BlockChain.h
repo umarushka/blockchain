@@ -96,6 +96,7 @@ using json = nlohmann::json;
 using namespace std;
 static std::string s;
 static std::ofstream o("bitcoins.json");
+static string files;
 
 // This is the interface class for reading the BlockChain
 
@@ -222,7 +223,7 @@ public:
 
     virtual void printTransactions(uint32_t blockIndex) = 0;
 
-    virtual bool readBlockHeaders(uint32_t maxBlock, uint32_t &blockCount, const char *dataPath, vector<string> files) = 0;
+    virtual bool readBlockHeaders(uint32_t maxBlock, uint32_t &blockCount) = 0;
     virtual uint32_t buildBlockChain(void) = 0;
 
     virtual void printAddress(const char *address) = 0;
@@ -234,6 +235,6 @@ public:
 };
 
 
-BlockChain *createBlockChain(const char *rootPath, vector<string> files); // Create the BlockChain interface using this root directory for the location of the first 'blk00000.dat' on your hard drive.
+BlockChain *createBlockChain(const char *rootPath, string files); // Create the BlockChain interface using this root directory for the location of the first 'blk00000.dat' on your hard drive.
 
 #endif

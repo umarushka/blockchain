@@ -28,6 +28,8 @@
 #include <string.h>
 #include <time.h>
 
+extern string files;
+
 // Note, to minimize dynamic memory allocation this parser pre-allocates memory for the maximum ever expected number
 // of bitcoin addresses, transactions, inputs, outputs, and blocks.
 // The numbers here are large enough to read the entire blockchain as of January 1, 2014 with a fair amoutn of room to grow.
@@ -3977,7 +3979,7 @@ protected:
 class BlockChainImpl : public BlockChain {
 public:
 
-    BlockChainImpl(const char *rootPath, vector<string> files) {
+    BlockChainImpl(const char *rootPath, string files) {
         sprintf(mRootDir, "%s", rootPath);
         mCurrentBlockData = mBlockDataBuffer; // scratch buffers to read in up to 3 block.
         mTransactionCount = 0;
@@ -4011,16 +4013,15 @@ public:
 
     // Open the next data file in the block-chain sequence
 
-    bool openBlock(vector<string> files) {
+    bool openBlock(string files) {
         bool ret = false;
 
         char scratch[1024];
 #ifdef _MSC_VER
         sprintf(scratch, "%s\\blk%05d.dat", mRootDir, mBlockIndex); // get the filename
 #else
-        sprintf(scratch, "%s%s", mRootDir, files[mBlockIndex].c_str()); // get the filename
+        sprintf(scratch, "%s%s", mRootDir, files.c_str()); // get the filename
 #endif
-        if (mBlockIndex >= files.size()) return false;
         FILE *fph = fopen(scratch, "rb");
         if (fph) {
             fseek(fph, 0L, SEEK_END);
@@ -4449,7 +4450,7 @@ public:
         }
     }
 
-    bool readBlockHeader(const char *dataPath, vector<string> files) {
+    bool readBlockHeader() {
         bool ok = false;
         FILE *fph = mBlockChain[mBlockIndex];
         if (fph) {
@@ -4457,7 +4458,7 @@ public:
             uint32_t lastBlockRead = (uint32_t) ftell(fph);
             size_t r = fread(&magicID, sizeof (magicID), 1, fph); // Attempt to read the magic id for the next block
             if (r == 0) {
-                mBlockIndex++; // advance to the next data file if we couldn't read any further in the current data file
+//                mBlockIndex--; // advance to the next data file if we couldn't read any further in the current data file
                 if (openBlock(files)) {
                     fph = mBlockChain[mBlockIndex];
                     r = fread(&magicID, sizeof (magicID), 1, fph); // if we opened up a new file; read the magic id from it's first block.
@@ -4493,7 +4494,7 @@ public:
                 if (found) // if we found it before the EOF, we are cool, otherwise, we need to advance to the next file.
                 {
                 } else {
-                    mBlockIndex++; // advance to the next data file if we couldn't read any further in the current data file
+//                    mBlockIndex--; // advance to the next data file if we couldn't read any further in the current data file
                     if (openBlock(files)) {
                         fph = mBlockChain[mBlockIndex];
                         r = fread(&magicID, sizeof (magicID), 1, fph); // if we opened up a new file; read the magic id from it's first block.
@@ -4586,9 +4587,8 @@ public:
         return mBlockCount;
     }
 
-    virtual bool readBlockHeaders(uint32_t maxBlock, uint32_t &blockCount,
-            const char *dataPath, vector<string> files) {
-        if (readBlockHeader(dataPath, files) && mScanCount < maxBlock) {
+    virtual bool readBlockHeaders(uint32_t maxBlock, uint32_t &blockCount) {
+        if (readBlockHeader() && mScanCount < maxBlock) {
             mScanCount++;
             blockCount = mScanCount;
             return true; // true means there are more blocks to read..
@@ -4645,7 +4645,7 @@ public:
 
 };
 
-BlockChain *createBlockChain(const char *rootPath, vector<string> files) {
+BlockChain *createBlockChain(const char *rootPath, string files) {
     BlockChainImpl *b = new BlockChainImpl(rootPath, files);
     if (!b->isValid()) {
         delete b;
