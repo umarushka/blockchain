@@ -8,6 +8,14 @@
 #include <time.h>
 #include <inttypes.h>
 #include <unistd.h>
+#include <dirent.h>
+#include <errno.h>
+#include <vector>
+#include <string>
+#include <sys/types.h>
+#include <iostream>
+
+using namespace std;
 
 #include "errlog.h"
 #include "timer.h"
@@ -18,6 +26,21 @@
 
 time_t zombieDate(0x510B56CB); // right around January 1, 2013
 char mDataPath[1024];
+
+int getDir(string dir, vector<string> &files) {
+    DIR *dp;
+    struct dirent *dirp;
+    if ((dp = opendir(dir.c_str())) == NULL) {
+        cout << "Error(" << errno << ") opening " << dir << endl;
+        return errno;
+    }
+
+    while ((dirp = readdir(dp)) != NULL) {
+        files.push_back(string(dirp->d_name));
+    }
+    closedir(dp);
+    return 0;
+}
 
 static double getMem() {
 
@@ -55,13 +78,12 @@ enum CommandMode {
 class BlockChainCommand {
 public:
 
-    BlockChainCommand(const char *dataPath) {
-        mBlockChain = createBlockChain(dataPath); // Create the block-chain parser using this root path
+    BlockChainCommand(const char *dataPath, vector<string> files) {
+        mBlockChain = createBlockChain(dataPath, files); // Create the block-chain parser using this root path
         mStatResolution = SR_YEAR;
         mMaxBlock = 500000;
-        info("Welcome to the BlockChain command parser.\r\n");
-        info("Registered DataDirectory: %s to scan for the blockchain.\r\n", dataPath);
-        info("\r\n");
+        info("Welcome to the BlockChain command parser.");
+        info("Registered DataDirectory: %s to scan for the blockchain.", dataPath);
         mProcessTransactions = false;
         mProcessBlock = 0;
         mLastBlockScan = 0;
@@ -102,8 +124,8 @@ public:
         }
     }
 
-    bool scanBlockChain() {
-        bool ok = mBlockChain->readBlockHeaders(mMaxBlock, mLastBlockScan);
+    bool scanBlockChain(const char *dataPath, vector<string> files) {
+        bool ok = mBlockChain->readBlockHeaders(mMaxBlock, mLastBlockScan, dataPath, files);
         if (!ok) {
             mFinishedScanning = true;
             mMode = CM_NONE; // done scanning.
@@ -142,7 +164,7 @@ public:
 int main(int argc, const char **argv) {
 
     const char *dataPath = ".";
-
+    vector<string> files;
     auto start = Timer::usecs();
     fprintf(stderr, "\n");
     info("\e[32m mem at start = %.3f Gigs \e[0m", getMem());
@@ -153,10 +175,20 @@ int main(int argc, const char **argv) {
         dataPath = argv[1];
     }
 
-    sprintf(mDataPath, "%s", dataPath);
-    BlockChainCommand bc(dataPath);
-    while (bc.scanBlockChain());
-    
+    getDir(argv[1], files);
+    std::sort(files.begin(), files.end());
+//    files.erase(files.begin());
+//    files.erase(files.begin());
+    for (uint8_t i = 0; i < files.size(); ++i)
+        cout << files[i] << endl;
+    //sFile.resize(2);
+//    sFile.push_back(files[0]);
+//    sFile.push_back(files[1]);
+//    cout << sFile[0] << endl << endl << endl;
+    BlockChainCommand bc(dataPath, files);
+    printf("\e[32m==============%s\e[0m\r\n", dataPath);
+    while (bc.scanBlockChain(dataPath, files));
+
     auto elapsed = (Timer::usecs() - start)*1e-6;
     info("\e[32m all done in %.2f seconds \e[0m", elapsed);
     info("\e[32m mem at end = %.3f Gigs \e[0m", getMem());
