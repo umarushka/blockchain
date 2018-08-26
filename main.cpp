@@ -31,7 +31,8 @@ int getDir(string dir, vector<string> &files) {
     DIR *dp;
     struct dirent *dirp;
     if ((dp = opendir(dir.c_str())) == NULL) {
-        cout << "Error(" << errno << ") opening " << dir << endl;
+        cout << "Error(" << errno << ") opening directory: " << dir << endl;
+        exit(0);
         return errno;
     }
 
@@ -97,12 +98,12 @@ public:
         mAddresses = NULL;
         mMode = CM_NONE;
 
-//        if (mBlockChain) {
-//            info("\e[32m File: blk00000.dat opened successfuly in directory: %s \e[0m", dataPath);
-//        } else {
-//            info("\e[31m Failed to open file: blk00000.dat in directory: %s \e[0m", dataPath);
-//            mMode = CM_EXIT;
-//        }
+        if (mBlockChain) {
+            info("\e[32m File: blk00000.dat opened successfuly in directory: %s \e[0m", dataPath);
+        } else {
+            info("\e[31m Failed to open file: blk00000.dat in directory: %s \e[0m", dataPath);
+            mMode = CM_EXIT;
+        }
     }
 
     ~BlockChainCommand(void) {
@@ -170,7 +171,8 @@ int main(int argc, const char **argv) {
     info("\e[32m mem at start = %.3f Gigs \e[0m", getMem());
 
     if (argc < 2) {
-        info("Using local test FILE");
+        info("\e[31m Show the path to bitcoin blocks file.... \e[0m");
+        exit(0);
     } else {
         dataPath = argv[1];
     }
