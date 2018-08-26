@@ -3977,7 +3977,8 @@ protected:
 // This is the implementation of the BlockChain parser interface
 
 class BlockChainImpl : public BlockChain {
-public:
+private:
+    static BlockChainImpl *mBlockChainImpl;
 
     BlockChainImpl(const char *rootPath, string files) {
         sprintf(mRootDir, "%s", rootPath);
@@ -4001,6 +4002,15 @@ public:
     }
 
     // Close all blockchain files which have been opended so far
+public:
+
+    static BlockChainImpl* getInstance(const char *rootPath, string files) {
+        if (mBlockChainImpl == NULL) {
+            mBlockChainImpl = new BlockChainImpl(rootPath, files);
+        }
+
+        return mBlockChainImpl;
+    }
 
     virtual ~BlockChainImpl(void) {
         for (uint32_t i = 0; i < mBlockIndex; i++) {
@@ -4458,7 +4468,7 @@ public:
             uint32_t lastBlockRead = (uint32_t) ftell(fph);
             size_t r = fread(&magicID, sizeof (magicID), 1, fph); // Attempt to read the magic id for the next block
             if (r == 0) {
-//                mBlockIndex--; // advance to the next data file if we couldn't read any further in the current data file
+                mBlockIndex++; // advance to the next data file if we couldn't read any further in the current data file
                 if (openBlock(files)) {
                     fph = mBlockChain[mBlockIndex];
                     r = fread(&magicID, sizeof (magicID), 1, fph); // if we opened up a new file; read the magic id from it's first block.
@@ -4494,7 +4504,7 @@ public:
                 if (found) // if we found it before the EOF, we are cool, otherwise, we need to advance to the next file.
                 {
                 } else {
-//                    mBlockIndex--; // advance to the next data file if we couldn't read any further in the current data file
+                    mBlockIndex++; // advance to the next data file if we couldn't read any further in the current data file
                     if (openBlock(files)) {
                         fph = mBlockChain[mBlockIndex];
                         r = fread(&magicID, sizeof (magicID), 1, fph); // if we opened up a new file; read the magic id from it's first block.
@@ -4645,8 +4655,10 @@ public:
 
 };
 
+BlockChainImpl *BlockChainImpl::mBlockChainImpl = 0;
+
 BlockChain *createBlockChain(const char *rootPath, string files) {
-    BlockChainImpl *b = new BlockChainImpl(rootPath, files);
+    BlockChainImpl *b = BlockChainImpl::getInstance(rootPath, files);
     if (!b->isValid()) {
         delete b;
         b = NULL;
