@@ -8,11 +8,6 @@ Who wrote it ?
 
         uladzimir.marushka@yahoo.com
 
-Canonical source code repo:
----------------------------
-
-    git clone github.com:umarushka/blockchain.git
-
 License:
 --------
 
@@ -34,11 +29,11 @@ How do I build it ?
 
 Install dependencies:
 
-        sudo apt-get install libssl-dev build-essential g++ libboost-all-dev libsparsehash-dev git-core perl
+        sudo apt-get install build-essential git
 
 Get the source:
 
-        git clone git://github.com/umarushka/blockchain.git
+        git clone https://github.com/umarushka/blockchain.git
 
     Build it:
 
